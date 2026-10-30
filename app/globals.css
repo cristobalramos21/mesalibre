@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
+/*
+ * Colores de la app. Los 4 estados de ocupación se definen SOLO aquí.
+ * Texto (--estado-*) sobre fondo (--estado-*-bg): contraste ≥ 4.5:1 (WCAG AA).
+ *   libre    #166534 / #dcfce7  ≈ 6.5:1
+ *   pocas    #92400e / #fef3c7  ≈ 6.4:1
+ *   lleno    #991b1b / #fee2e2  ≈ 6.8:1
+ *   sin-info #374151 / #f3f4f6  ≈ 9.3:1
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --background: #fafaf9;
+  --foreground: #1c1917;
+  --muted: #57534e;
+  --card: #ffffff;
+  --border: #e7e5e4;
+
+  --estado-libre: #166534;
+  --estado-libre-bg: #dcfce7;
+  --estado-pocas: #92400e;
+  --estado-pocas-bg: #fef3c7;
+  --estado-lleno: #991b1b;
+  --estado-lleno-bg: #fee2e2;
+  --estado-sin-info: #374151;
+  --estado-sin-info-bg: #f3f4f6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-muted: var(--muted);
+  --color-card: var(--card);
+  --color-border: var(--border);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-libre: var(--estado-libre);
+  --color-libre-bg: var(--estado-libre-bg);
+  --color-pocas: var(--estado-pocas);
+  --color-pocas-bg: var(--estado-pocas-bg);
+  --color-lleno: var(--estado-lleno);
+  --color-lleno-bg: var(--estado-lleno-bg);
+  --color-sin-info: var(--estado-sin-info);
+  --color-sin-info-bg: var(--estado-sin-info-bg);
+
+  --font-sans: var(--font-geist-sans);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
