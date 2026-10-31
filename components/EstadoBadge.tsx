@@ -1,67 +1,56 @@
+import { CircleAlert, CircleCheck, CircleHelp, CircleX, Users } from "lucide-react";
 import type { EstadoDescrito, TipoEstado } from "@/lib/estado";
 
 // Estado = color + ícono + texto, siempre con antigüedad (O4).
-const ESTILOS: Record<TipoEstado, string> = {
+export const ESTILOS_ESTADO: Record<TipoEstado, string> = {
   libre: "bg-libre-bg text-libre",
   pocas: "bg-pocas-bg text-pocas",
   lleno: "bg-lleno-bg text-lleno",
   "sin-info": "bg-sin-info-bg text-sin-info",
 };
 
-function Icono({ tipo }: { tipo: TipoEstado }) {
-  const comun = {
-    width: 16,
-    height: 16,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 3,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    "aria-hidden": true,
-    className: "shrink-0",
-  };
-  switch (tipo) {
-    case "libre": // ✓
-      return (
-        <svg {...comun}>
-          <path d="M5 12.5l4.5 4.5L19 7.5" />
-        </svg>
-      );
-    case "pocas": // !
-      return (
-        <svg {...comun}>
-          <path d="M12 5v9" />
-          <path d="M12 19h.01" />
-        </svg>
-      );
-    case "lleno": // ✕
-      return (
-        <svg {...comun}>
-          <path d="M6 6l12 12M18 6L6 18" />
-        </svg>
-      );
-    case "sin-info": // ?
-      return (
-        <svg {...comun} strokeWidth={2.5}>
-          <path d="M9.2 9a3 3 0 1 1 4.2 2.8c-.9.4-1.4 1.1-1.4 2v.7" />
-          <path d="M12 19h.01" />
-        </svg>
-      );
-  }
-}
+export const ICONOS_ESTADO = {
+  libre: CircleCheck,
+  pocas: CircleAlert,
+  lleno: CircleX,
+  "sin-info": CircleHelp,
+} satisfies Record<TipoEstado, unknown>;
 
-export function EstadoBadge({ estado }: { estado: EstadoDescrito }) {
+export function EstadoBadge({
+  estado,
+  grande = false,
+  alinear = "derecha",
+}: {
+  estado: EstadoDescrito;
+  grande?: boolean;
+  alinear?: "derecha" | "izquierda";
+}) {
+  const Icono = ICONOS_ESTADO[estado.tipo];
   return (
-    <div className="flex flex-col items-end gap-0.5 text-right">
+    <div
+      className={`flex flex-col gap-0.5 ${alinear === "derecha" ? "items-end text-right" : "items-start"}`}
+    >
       <span
-        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold ${ESTILOS[estado.tipo]}`}
+        className={`inline-flex items-center gap-1.5 rounded-full font-semibold ${ESTILOS_ESTADO[estado.tipo]} ${
+          grande ? "px-3.5 py-1.5 text-lg" : "px-2.5 py-1 text-sm"
+        }`}
       >
-        <Icono tipo={estado.tipo} />
+        <Icono aria-hidden size={grande ? 22 : 16} strokeWidth={2.5} className="shrink-0" />
         {estado.texto}
       </span>
-      {estado.antiguedad && <span className="text-xs text-muted">{estado.antiguedad}</span>}
-      {estado.enCamino && <span className="text-xs text-muted">{estado.enCamino}</span>}
+      {estado.antiguedad && (
+        <span className={grande ? "text-sm text-muted" : "text-xs text-muted"}>
+          Reportado {estado.antiguedad}
+        </span>
+      )}
+      {estado.enCamino && (
+        <span
+          className={`inline-flex items-center gap-1 font-medium text-foreground ${grande ? "text-sm" : "text-xs"}`}
+        >
+          <Users aria-hidden size={grande ? 16 : 13} className="shrink-0" />
+          {estado.enCamino}
+        </span>
+      )}
     </div>
   );
 }
