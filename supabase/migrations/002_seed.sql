@@ -1,6 +1,7 @@
 -- =============================================================================
 -- Mesa Libre · 002_seed.sql
 -- Lugares iniciales (CLAUDE.md §9), mencionados en el E1.
+-- capacidad_personas = tamaño máximo de grupo que cabe (F3: compatible si capacidad ≥ mín. del rango).
 -- Nombre, zona y tiene_mesa de Pasto vienen del E1. Capacidad, mesas, condiciones,
 -- microondas y coordenadas NO: son valores provisionales, marcados línea a línea.
 -- Coordenadas aproximadas dentro del Campus San Joaquín (Av. Vicuña Mackenna 4860).
@@ -18,7 +19,7 @@ values
 -- El Castaño · habitual de P2 · escenario demo: siempre lleno
 (
   'el-castano', 'El Castaño', 'Ingeniería',
-  40,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
+  6,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
   8,          -- num_mesas           -- PROVISIONAL: levantar en terreno
   false,      -- techado             -- PROVISIONAL: levantar en terreno
   true,       -- con_sillas          -- PROVISIONAL: levantar en terreno
@@ -31,7 +32,7 @@ values
 -- Cafetería de Ingeniería · P2 · confirmar si se puede comer comida traída
 (
   'cafeteria-ingenieria', 'Cafetería de Ingeniería', 'Ingeniería',
-  60,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
+  8,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
   12,         -- num_mesas           -- PROVISIONAL: levantar en terreno
   true,       -- techado             -- PROVISIONAL: levantar en terreno
   true,       -- con_sillas          -- PROVISIONAL: levantar en terreno
@@ -44,7 +45,7 @@ values
 -- Patio de Ingeniería · P2 · eventos frecuentes
 (
   'patio-ingenieria', 'Patio de Ingeniería', 'Ingeniería',
-  50,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
+  10,        -- capacidad_personas  -- PROVISIONAL: levantar en terreno
   10,         -- num_mesas           -- PROVISIONAL: levantar en terreno
   false,      -- techado             -- PROVISIONAL: levantar en terreno
   true,       -- con_sillas          -- PROVISIONAL: levantar en terreno
@@ -57,7 +58,7 @@ values
 -- Patio de la Virgen · P2
 (
   'patio-virgen', 'Patio de la Virgen', 'Ingeniería',
-  30,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
+  4,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
   6,          -- num_mesas           -- PROVISIONAL: levantar en terreno
   false,      -- techado             -- PROVISIONAL: levantar en terreno
   false,      -- con_sillas          -- PROVISIONAL: levantar en terreno
@@ -70,7 +71,7 @@ values
 -- Facultad de Enfermería · alternativa de P2
 (
   'enfermeria', 'Facultad de Enfermería', 'Enfermería',
-  40,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
+  6,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
   8,          -- num_mesas           -- PROVISIONAL: levantar en terreno
   true,       -- techado             -- PROVISIONAL: levantar en terreno
   true,       -- con_sillas          -- PROVISIONAL: levantar en terreno
@@ -83,7 +84,7 @@ values
 -- College · P1
 (
   'college', 'College', 'College',
-  45,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
+  8,         -- capacidad_personas  -- PROVISIONAL: levantar en terreno
   9,          -- num_mesas           -- PROVISIONAL: levantar en terreno
   true,       -- techado             -- PROVISIONAL: levantar en terreno
   true,       -- con_sillas          -- PROVISIONAL: levantar en terreno
@@ -96,7 +97,7 @@ values
 -- Pasto / áreas verdes · P1, P3 · sin mesa (fiel al caso P1), sin zona
 (
   'pasto', 'Pasto / áreas verdes', null,
-  100,        -- capacidad_personas  -- PROVISIONAL: levantar en terreno
+  20,        -- capacidad_personas  -- PROVISIONAL: levantar en terreno
   null,       -- num_mesas (no aplica)
   false,      -- techado
   false,      -- con_sillas
