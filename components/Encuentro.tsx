@@ -15,6 +15,7 @@ import { obtenerDeviceId } from "@/lib/device";
 import { describirEstado, textoAntiguedad, type EstadoDescrito } from "@/lib/estado";
 import { useAhora, useDatosEnVivo, type TablaEnVivo } from "@/lib/en-vivo";
 import { formatearHora } from "@/lib/hora";
+import { etiquetaFiltro } from "@/lib/filtros";
 import { useFiltros } from "@/lib/preferencias";
 import { getSupabase } from "@/lib/supabase";
 import type { Asistencia, EstadoActual, Lugar } from "@/lib/tipos";
@@ -133,9 +134,23 @@ export function Encuentro({ encuentro: inicial, asistencias, estados, lugar, lug
               {alternativas.length > 0 ? (
                 <ListaAlternativas alternativas={alternativas} />
               ) : (
-                <p className="rounded-xl border border-dashed border-border bg-card p-4">
-                  No encontramos otros lugares con espacio para {encuentro.personas} personas.
-                </p>
+                <div className="rounded-xl border border-dashed border-border bg-card p-4">
+                  <p>No encontramos otros lugares con espacio para {encuentro.personas} personas.</p>
+                  {filtros.length > 0 && (
+                    <>
+                      <p className="mt-1 text-sm text-muted">
+                        Estás usando tus filtros: {filtros.map(etiquetaFiltro).join(" · ")}.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => guardar(CLAVES.filtros, null)}
+                        className="mt-3 min-h-11 rounded-lg border border-foreground px-4 text-sm font-semibold"
+                      >
+                        Quitar filtros
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
             </section>
           )}
