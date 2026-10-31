@@ -1,10 +1,21 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ErrorCarga } from "@/components/ErrorCarga";
 import { Ficha } from "@/components/Ficha";
 import { Pie } from "@/components/Pie";
-import { cargarLugaresYEstados } from "@/lib/datos";
+import { cargarLugarPorSlug, cargarLugaresYEstados } from "@/lib/datos";
 import { demoActivo } from "@/lib/demo";
+
+export async function generateMetadata({ params }: PageProps<"/lugar/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const lugar = await cargarLugarPorSlug(slug);
+    return { title: lugar ? `${lugar.nombre} · Mesa Libre` : "Lugar no encontrado · Mesa Libre" };
+  } catch {
+    return { title: "Mesa Libre" };
+  }
+}
 
 export default function PaginaLugar({ params }: PageProps<"/lugar/[slug]">) {
   return (
