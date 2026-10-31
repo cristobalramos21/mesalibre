@@ -16,7 +16,8 @@ const VERDE_FONDO = "#dcfce7";
 
 export default async function Imagen({ params }: { params: Promise<{ codigo: string }> }) {
   const codigo = normalizarCodigo((await params).codigo);
-  let lugar = "Mesa Libre";
+  // null: código inexistente o error de carga → imagen neutra, sin «Almorzamos en».
+  let lugar: string | null = null;
   let hora: string | null = null;
   try {
     const datos = codigo ? await cargarEncuentroConLugar(codigo) : null;
@@ -43,12 +44,18 @@ export default async function Imagen({ params }: { params: Promise<{ codigo: str
         }}
       >
         <div style={{ display: "flex", fontSize: 36, fontWeight: 700, color: SUAVE }}>Mesa Libre</div>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", fontSize: 48, color: SUAVE }}>Almorzamos en</div>
-          <div style={{ display: "flex", fontSize: lugar.length > 22 ? 84 : 104, fontWeight: 700, lineHeight: 1.05 }}>
-            {lugar}
+        {lugar ? (
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", fontSize: 48, color: SUAVE }}>Almorzamos en</div>
+            <div style={{ display: "flex", fontSize: lugar.length > 22 ? 84 : 104, fontWeight: 700, lineHeight: 1.05 }}>
+              {lugar}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={{ display: "flex", fontSize: 72, fontWeight: 700, lineHeight: 1.1 }}>
+            ¿Hay mesa para tu grupo?
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
           {hora && (
             <div
@@ -65,7 +72,9 @@ export default async function Imagen({ params }: { params: Promise<{ codigo: str
               {hora}
             </div>
           )}
-          <div style={{ display: "flex", fontSize: 36, color: SUAVE }}>Toca para ver si hay mesa</div>
+          <div style={{ display: "flex", fontSize: 36, color: SUAVE }}>
+            {lugar ? "Toca para ver si hay mesa" : "Revísalo antes de caminar"}
+          </div>
         </div>
       </div>
     ),

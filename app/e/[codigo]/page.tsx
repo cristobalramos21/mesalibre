@@ -20,10 +20,9 @@ const encuentroConLugar = cache(async (codigo: string) => {
 // Open Graph para el preview en WhatsApp. La imagen sale de opengraph-image.tsx.
 export async function generateMetadata({ params }: PageProps<"/e/[codigo]">): Promise<Metadata> {
   const codigo = normalizarCodigo((await params).codigo);
-  const resultado = codigo ? await encuentroConLugar(codigo) : null;
-  if (!resultado?.ok || !resultado.datos) {
-    return { title: "Encuentro · Mesa Libre", robots: { index: false } };
-  }
+  const resultado = codigo ? await encuentroConLugar(codigo) : { ok: true as const, datos: null };
+  if (!resultado.ok) return { title: "Mesa Libre", robots: { index: false } };
+  if (!resultado.datos) return { title: "Encuentro no encontrado · Mesa Libre", robots: { index: false } };
   const { encuentro, lugar } = resultado.datos;
   const titulo = `Almorzamos en ${lugar.nombre} a las ${formatearHora(encuentro.hora)}`;
   const descripcion = "Mira si hay mesa ahora y avisa que vas. Se abre sin cuenta.";

@@ -15,6 +15,7 @@ import { obtenerDeviceId } from "@/lib/device";
 import { describirEstado, textoAntiguedad, type EstadoDescrito } from "@/lib/estado";
 import { useAhora, useDatosEnVivo, type TablaEnVivo } from "@/lib/en-vivo";
 import { formatearHora } from "@/lib/hora";
+import { etiquetaFiltro } from "@/lib/filtros";
 import { useFiltros } from "@/lib/preferencias";
 import { getSupabase } from "@/lib/supabase";
 import type { Asistencia, EstadoActual, Lugar } from "@/lib/tipos";
@@ -50,12 +51,14 @@ export function Encuentro({ encuentro: inicial, asistencias, estados, lugar, lug
   const ahora = useAhora(leidoEnMs);
   const [filtros] = useFiltros();
   const [sinMesa, setSinMesa] = useState(false);
+  // La BD puede rechazar por vencido antes de que el reloj del cliente llegue a vence_en.
+  const [terminadoEnBd, setTerminadoEnBd] = useState(false);
 
   const porLugar = useMemo(() => new Map<string, EstadoActual>(datos.estados.map((e) => [e.lugar_id, e])), [datos.estados]);
   const estado = describirEstado(porLugar.get(lugar.id), ahora);
   const hora = formatearHora(encuentro.hora);
   const llegadaMs = encuentro.llegada_en ? new Date(encuentro.llegada_en).getTime() : null;
-  const terminado = ahora >= new Date(encuentro.vence_en).getTime();
+  const terminado = terminadoEnBd || ahora >= new Date(encuentro.vence_en).getTime();
 
   // Lleno o alta demanda (rango 2: pocas · alta demanda; 4: lleno o tratado como lleno).
   const enRiesgo = estado.rango === 2 || estado.rango === 4;
@@ -131,14 +134,33 @@ export function Encuentro({ encuentro: inicial, asistencias, estados, lugar, lug
               {alternativas.length > 0 ? (
                 <ListaAlternativas alternativas={alternativas} />
               ) : (
-                <p className="rounded-xl border border-dashed border-border bg-card p-4">
-                  No encontramos otros lugares con espacio para {encuentro.personas} personas.
-                </p>
+                <div className="rounded-xl border border-dashed border-border bg-card p-4">
+                  <p>No encontramos otros lugares con espacio para {encuentro.personas} personas.</p>
+                  {filtros.length > 0 && (
+                    <>
+                      <p className="mt-1 text-sm text-muted">
+                        Estás usando tus filtros: {filtros.map(etiquetaFiltro).join(" · ")}.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => guardar(CLAVES.filtros, null)}
+                        className="mt-3 min-h-11 rounded-lg border border-foreground px-4 text-sm font-semibold"
+                      >
+                        Quitar filtros
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
             </section>
           )}
 
-          <Asistentes codigo={codigo} asistencias={datos.asistencias} onCambio={refrescar} />
+          <Asistentes
+            codigo={codigo}
+            asistencias={datos.asistencias}
+            onCambio={refrescar}
+            onTerminado={() => setTerminadoEnBd(true)}
+          />
 
           {!nuevo && (
             <section aria-labelledby="titulo-reenviar" className="mt-6">
@@ -159,6 +181,7 @@ export function Encuentro({ encuentro: inicial, asistencias, estados, lugar, lug
               requestAnimationFrame(() => document.getElementById("alternativas")?.scrollIntoView({ behavior: "smooth" }));
             }}
             onCambio={refrescar}
+            onTerminado={() => setTerminadoEnBd(true)}
           />
         </>
       )}
@@ -189,11 +212,21 @@ function EncuentroTerminado() {
   );
 }
 
-type EnvioVoy = "editar" | "enviando" | "error" | "terminado";
+type EnvioVoy = "editar" | "enviando" | "error";
 
 // "Voy" con nombre opcional. Uno por dispositivo: el dispositivo recuerda dónde dijo "Voy"
 // (mismo almacenamiento que el device_id) y la BD rechaza duplicados (23505).
-function Asistentes({ codigo, asistencias, onCambio }: { codigo: string; asistencias: Asistencia[]; onCambio: () => void }) {
+function Asistentes({
+  codigo,
+  asistencias,
+  onCambio,
+  onTerminado,
+}: {
+  codigo: string;
+  asistencias: Asistencia[];
+  onCambio: () => void;
+  onTerminado: () => void;
+}) {
   const guardados = useAlmacen(CLAVES.voy);
   const yaVoy = (guardados ?? "").split(",").includes(codigo);
   const [nombre, setNombre] = useState("");
@@ -213,7 +246,8 @@ function Asistentes({ codigo, asistencias, onCambio }: { codigo: string; asisten
     if (error && error.code !== "23505") {
       console.error("asistencias:", error);
       // 42501: la policy rechaza encuentros vencidos.
-      setEnvio(error.code === "42501" ? "terminado" : "error");
+      if (error.code === "42501") onTerminado();
+      else setEnvio("error");
       return;
     }
     marcarVoy();
@@ -240,10 +274,6 @@ function Asistentes({ codigo, asistencias, onCambio }: { codigo: string; asisten
       {yaVoy ? (
         <p role="status" className="flex items-center gap-2 rounded-xl bg-libre-bg p-3 font-semibold text-libre">
           <CircleCheck aria-hidden size={20} /> Ya estás en la lista
-        </p>
-      ) : envio === "terminado" ? (
-        <p role="alert" className="rounded-xl bg-sin-info-bg p-3 text-sin-info">
-          Este encuentro ya terminó.
         </p>
       ) : (
         <form onSubmit={voy} className="flex gap-2">
@@ -277,7 +307,7 @@ function Asistentes({ codigo, asistencias, onCambio }: { codigo: string; asisten
   );
 }
 
-type EnvioLlegada = "listo" | "enviando" | "error" | "terminado";
+type EnvioLlegada = "listo" | "enviando" | "error";
 
 // F21 · Ambos botones marcan la llegada (deja de contar como grupo en camino).
 // "No hay mesa" además reporta "lleno" (acepta 'cooldown') y muestra alternativas.
@@ -289,6 +319,7 @@ function Llegada({
   ahora,
   onSinMesa,
   onCambio,
+  onTerminado,
 }: {
   codigo: string;
   lugar: Lugar;
@@ -296,6 +327,7 @@ function Llegada({
   ahora: number;
   onSinMesa: () => void;
   onCambio: () => void;
+  onTerminado: () => void;
 }) {
   const [envio, setEnvio] = useState<EnvioLlegada>("listo");
   const [ofrecerReporte, setOfrecerReporte] = useState(false);
@@ -309,7 +341,9 @@ function Llegada({
     });
     if (error) {
       console.error("marcar_llegada:", error);
-      setEnvio(error.code === "P0002" ? "terminado" : "error");
+      // P0002: el encuentro no existe o ya terminó.
+      if (error.code === "P0002") onTerminado();
+      else setEnvio("error");
       return;
     }
     setEnvio("listo");
@@ -323,16 +357,20 @@ function Llegada({
       {ofrecerReporte ? (
         <div>
           <p className="mb-2 font-semibold">¿Cómo está {lugar.nombre}?</p>
-          <OpcionesReporte lugar={lugar} onReportado={onCambio} onCerrar={() => setOfrecerReporte(false)} compacto />
+          <OpcionesReporte
+            lugar={lugar}
+            onReportado={() => {
+              onCambio();
+              setTimeout(() => setOfrecerReporte(false), 1500);
+            }}
+            onCerrar={() => setOfrecerReporte(false)}
+            compacto
+          />
         </div>
       ) : llegadaMs !== null ? (
         <p role="status" className="flex min-h-12 items-center justify-center gap-2 font-semibold">
           <CircleCheck aria-hidden size={20} className="text-libre" />
           El grupo llegó {textoAntiguedad(llegadaMs, ahora)}
-        </p>
-      ) : envio === "terminado" ? (
-        <p role="alert" className="min-h-12 text-center font-semibold">
-          Este encuentro ya terminó.
         </p>
       ) : (
         <>
