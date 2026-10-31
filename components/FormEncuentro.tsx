@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import { ATAJOS_HORA, DEMAND_BEFORE_MIN, NOTA_MAX } from "@/lib/config";
+import { ATAJOS_HORA, DEMAND_BEFORE_MIN, MAX_ENCUENTROS_HORA, NOTA_MAX } from "@/lib/config";
 import { obtenerDeviceId } from "@/lib/device";
 import { useAhora } from "@/lib/en-vivo";
 import { aMinutos, horaSantiago, proximaMediaHora } from "@/lib/hora";
@@ -87,7 +87,7 @@ export function FormEncuentro({ lugar, leidoEnMs }: { lugar: Lugar; leidoEnMs: n
           />
         </label>
         {horaPasada && (
-          <p className="mt-2 text-sm text-pocas">Esa hora ya pasó. El encuentro es para hoy.</p>
+          <p className="mt-2 text-sm text-pocas">Esa hora ya pasó. Igual puedes crearlo: el link sirve hasta las 23:59 de hoy.</p>
         )}
       </fieldset>
 
@@ -139,8 +139,8 @@ export function FormEncuentro({ lugar, leidoEnMs }: { lugar: Lugar; leidoEnMs: n
       <div className="sticky bottom-0 -mx-4 mt-auto border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
         {envio === "limite" && (
           <p role="alert" className="mb-2 rounded-xl bg-pocas-bg p-3 text-sm text-pocas">
-            Ya creaste 3 encuentros en la última hora. Espera un rato o comparte uno de los que ya
-            creaste.
+            Ya creaste {MAX_ENCUENTROS_HORA} encuentros en la última hora. Espera un rato o busca en el
+            chat de tu grupo el link que ya mandaste.
           </p>
         )}
         {envio === "error" && (
