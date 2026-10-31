@@ -16,3 +16,8 @@ export const GRUPO_RANGOS = [ {label:'1',min:1}, {label:'2–3',min:2}, {label:'
 export const GRUPO_DEFAULT = '4–6';
 export const POLL_MS = 60_000;          // respaldo si falla Realtime
 export const RELATIVE_TIME_TICK_MS = 30_000;
+
+// --- Decisiones de implementación (no están en §4 de CLAUDE.md) ---
+export const LUGARES_COMUNES = ['el-castano', 'cafeteria-ingenieria', 'patio-ingenieria', 'patio-virgen', 'college']; // [DECIDIR] F2: 5 lugares comunes
+export const ALTERNATIVAS_SIN_MESA = false; // [DECIDIR] F6: si Pasto (tiene_mesa=false) puede aparecer como alternativa
+export const DEMO_COOKIE = 'ml_demo';       // 'off' = sin datos demo (se fija con ?demo=off, se borra con ?demo=on)
