@@ -21,3 +21,6 @@ export const RELATIVE_TIME_TICK_MS = 30_000;
 export const LUGARES_COMUNES = ['el-castano', 'cafeteria-ingenieria', 'patio-ingenieria', 'patio-virgen', 'college']; // [DECIDIR] F2: 5 lugares comunes
 export const ALTERNATIVAS_SIN_MESA = false; // [DECIDIR] F6: si Pasto (tiene_mesa=false) puede aparecer como alternativa
 export const DEMO_COOKIE = 'ml_demo';       // 'off' = sin datos demo (se fija con ?demo=off, se borra con ?demo=on)
+export const ATAJOS_HORA = ['13:30', '13:45']; // F7: atajos fijos además de "Ahora"
+export const NOTA_MAX = 80;                 // F7 (también en BD: check en encuentros.nota)
+export const NOMBRE_MAX = 30;               // F9 (también en BD: check en asistencias.nombre)

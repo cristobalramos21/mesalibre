@@ -10,6 +10,7 @@ export const CLAVES = {
   grupo: "ml_grupo",
   filtros: "ml_filtros",
   deviceId: "ml_device_id",
+  voy: "ml_voy", // códigos de encuentros donde este dispositivo marcó "Voy", separados por coma
 } as const;
 
 export function leer(clave: string): string | null {
