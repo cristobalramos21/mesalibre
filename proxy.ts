@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { DEMO_COOKIE } from "@/lib/config";
+import { DEMO_COOKIE, DEMO_COOKIE_DIAS } from "@/lib/config";
 
-// ?demo=off desactiva los datos de demostración (cookie por 60 días); ?demo=on los reactiva.
+// ?demo=off desactiva los datos de demostración (cookie por DEMO_COOKIE_DIAS); ?demo=on los reactiva.
 // Redirige a la misma URL sin el parámetro para que los links compartidos queden limpios.
 export function proxy(request: NextRequest) {
   const demo = request.nextUrl.searchParams.get("demo");
@@ -13,7 +13,7 @@ export function proxy(request: NextRequest) {
   if (demo === "off") {
     respuesta.cookies.set(DEMO_COOKIE, "off", {
       path: "/",
-      maxAge: 60 * 60 * 24 * 60,
+      maxAge: 60 * 60 * 24 * DEMO_COOKIE_DIAS,
       sameSite: "lax",
     });
   } else {

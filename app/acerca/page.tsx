@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { FRESHNESS_MIN, REPORT_COOLDOWN_MIN } from "@/lib/config";
+import {
+  DEMAND_AFTER_MIN,
+  DEMAND_BEFORE_MIN,
+  DEMO_COOKIE_DIAS,
+  FRESHNESS_MIN,
+  MAX_ENCUENTROS_HORA,
+  REPORT_COOLDOWN_MIN,
+} from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "Acerca de Mesa Libre",
@@ -27,9 +34,9 @@ export default function Acerca() {
         <p>
           Desde la ficha de un lugar, «Juntarnos aquí» crea un link con el lugar y la hora para
           mandárselo a tu grupo. Quien lo abre ve el estado del lugar en vivo y puede marcar «Voy»
-          (el nombre es opcional), sin crear cuenta. Al llegar, «Llegué» o «Llegué y no hay mesa»
-          avisan a los demás grupos que van hacia el mismo lugar. Los encuentros duran hasta las
-          23:59 del día en que se crean.
+          (el nombre es opcional), sin crear cuenta. Al llegar, «Llegué» saca a tu grupo de los que
+          van en camino. «Llegué y no hay mesa» además reporta el lugar como lleno. Los encuentros
+          duran hasta las 23:59 del día en que se crean.
         </p>
       </Seccion>
 
@@ -41,11 +48,13 @@ export default function Acerca() {
           </li>
           <li>
             Después de {FRESHNESS_MIN} minutos sin reportes, el lugar aparece como «Sin información
-            reciente». Si hay varios reportes distintos, gana el más repetido.
+            reciente». Si en ese rato hay 3 o más reportes, gana el más repetido; si hay menos, gana el
+            más reciente.
           </li>
           <li>
-            «Grupos van hacia acá» cuenta los grupos que avisaron que se juntan en ese lugar en los
-            próximos minutos.
+            «N grupos van hacia acá» cuenta los encuentros en ese lugar con hora entre hace{" "}
+            {DEMAND_BEFORE_MIN} y dentro de {DEMAND_AFTER_MIN} minutos, que todavía no marcan
+            «Llegué».
           </li>
           <li>
             La capacidad, las condiciones y las distancias son aproximadas y se están revisando en
@@ -56,10 +65,13 @@ export default function Acerca() {
 
       <Seccion titulo="Sin cuenta">
         <p>
-          No pedimos correo, teléfono ni contraseña. Tu navegador guarda un identificador anónimo
-          para evitar reportes repetidos (uno por lugar cada {REPORT_COOLDOWN_MIN} minutos), junto
-          con tu lugar habitual, el tamaño de tu grupo, tus filtros y los encuentros donde dijiste
-          «Voy». Quien tenga el link de un encuentro ve los nombres de quienes van.
+          No pedimos correo, teléfono ni contraseña. Tu navegador crea un identificador anónimo y lo
+          guarda junto con tu lugar habitual, el tamaño de tu grupo, tus filtros y los encuentros
+          donde dijiste «Voy». Ese identificador también queda en nuestra base de datos con cada
+          reporte, encuentro y «Voy», pero otros usuarios no lo ven. Sirve para poner límites: un
+          reporte por lugar cada {REPORT_COOLDOWN_MIN} minutos, {MAX_ENCUENTROS_HORA} encuentros por
+          hora y un «Voy» por encuentro. Si eliges «Usar solo reportes reales», una cookie lo
+          recuerda por {DEMO_COOKIE_DIAS} días. El nombre que escribas al marcar «Voy» es público.
         </p>
       </Seccion>
 
