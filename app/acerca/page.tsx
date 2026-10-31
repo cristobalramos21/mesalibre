@@ -23,6 +23,16 @@ export default function Acerca() {
         </p>
       </Seccion>
 
+      <Seccion titulo="Encuentros">
+        <p>
+          Desde la ficha de un lugar, «Juntarnos aquí» crea un link con el lugar y la hora para
+          mandárselo a tu grupo. Quien lo abre ve el estado del lugar en vivo y puede marcar «Voy»
+          (el nombre es opcional), sin crear cuenta. Al llegar, «Llegué» o «Llegué y no hay mesa»
+          avisan a los demás grupos que van hacia el mismo lugar. Los encuentros duran hasta las
+          23:59 del día en que se crean.
+        </p>
+      </Seccion>
+
       <Seccion titulo="De dónde salen los datos">
         <ul className="list-disc space-y-1 pl-5">
           <li>
@@ -48,15 +58,18 @@ export default function Acerca() {
         <p>
           No pedimos correo, teléfono ni contraseña. Tu navegador guarda un identificador anónimo
           para evitar reportes repetidos (uno por lugar cada {REPORT_COOLDOWN_MIN} minutos), junto
-          con tu lugar habitual, el tamaño de tu grupo y tus filtros.
+          con tu lugar habitual, el tamaño de tu grupo, tus filtros y los encuentros donde dijiste
+          «Voy». Quien tenga el link de un encuentro ve los nombres de quienes van.
         </p>
       </Seccion>
 
       <Seccion titulo="Datos de demostración">
         <p>
           Para que la app se pueda probar a cualquier hora, algunos lugares muestran estados de
-          ejemplo que se renuevan solos (por ejemplo, El Castaño aparece lleno). En ese modo el pie
-          de página dice «Datos de demostración».
+          ejemplo que se renuevan solos: El Castaño aparece lleno, y hay 2 grupos de ejemplo en
+          camino al Patio de Ingeniería, que por eso aparece con alta demanda. En ese modo el pie de
+          página dice «Datos de demostración». Los reportes, encuentros y «Voy» que hagas son
+          reales y los ven los demás.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link prefetch={false} href="/?demo=off" className="inline-flex min-h-11 items-center rounded-lg border border-foreground px-4 text-sm font-semibold">
