@@ -1,0 +1,32 @@
+# Keep-alive de Supabase: el plan gratuito pausa el proyecto tras 7 días sin actividad.
+# Hace una lectura liviana de `lugares` con la clave pública. Corre lunes y jueves (dos veces
+# por semana, para no depender de que el cron semanal caiga justo antes de los 7 días).
+# Secrets del repo: SUPABASE_URL y SUPABASE_ANON_KEY (Settings → Secrets and variables → Actions).
+# GitHub solo ejecuta los workflows programados desde la rama por defecto (main).
+name: Keep-alive Supabase
+
+on:
+  schedule:
+    - cron: "17 12 * * 1,4" # 12:17 UTC (≈ 09:17 en Chile)
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Leer lugares
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Faltan los secrets SUPABASE_URL y/o SUPABASE_ANON_KEY" >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --retry 3 --retry-delay 10 \
+            "${SUPABASE_URL%/}/rest/v1/lugares?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -o /dev/null -w "HTTP %{http_code}\n"

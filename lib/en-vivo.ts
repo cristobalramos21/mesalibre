@@ -1,21 +1,32 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { POLL_MS, RELATIVE_TIME_TICK_MS } from "./config";
 import { cargarEstados } from "./datos";
 import { getSupabase } from "./supabase";
 import type { EstadoActual } from "./tipos";
 
-// Estados en vivo: Realtime sobre reportes/encuentros + polling cada 60 s (además vence
+export type TablaEnVivo = { table: "reportes" | "encuentros" | "asistencias"; filter?: string };
+
+const TABLAS_ESTADO: TablaEnVivo[] = [{ table: "reportes" }, { table: "encuentros" }];
+
+// Datos en vivo: Realtime sobre las tablas indicadas + polling cada 60 s (además vence
 // estados por tiempo aunque no haya cambios) + al volver a la pestaña.
-export function useEstadosEnVivo(iniciales: EstadoActual[], incluirDemo: boolean) {
-  const [estados, setEstados] = useState(iniciales);
+export function useDatosEnVivo<T>(inicial: T, cargar: () => Promise<T>, tablas: TablaEnVivo[]) {
+  const [datos, setDatos] = useState(inicial);
+  const cargarActual = useRef(cargar);
+  useEffect(() => {
+    cargarActual.current = cargar;
+  });
 
   const refrescar = useCallback(async () => {
     try {
-      setEstados(await cargarEstados(incluirDemo));
+      setDatos(await cargarActual.current());
     } catch (e) {
-      console.error("No se pudo actualizar el estado:", e);
+      console.error("No se pudo actualizar:", e);
     }
-  }, [incluirDemo]);
+  }, []);
+
+  // Clave estable para no resuscribir en cada render si el arreglo se crea de nuevo.
+  const claveTablas = JSON.stringify(tablas);
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -26,11 +37,15 @@ export function useEstadosEnVivo(iniciales: EstadoActual[], incluirDemo: boolean
       espera = setTimeout(refrescar, 400);
     };
 
-    const canal = supabase
-      .channel(`estado-${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "reportes" }, programar)
-      .on("postgres_changes", { event: "*", schema: "public", table: "encuentros" }, programar)
-      .subscribe();
+    // Un canal por tabla: si una tabla no está publicada en Realtime, el servidor rechaza el
+    // canal completo; así las demás siguen llegando.
+    const sufijo = Math.random().toString(36).slice(2);
+    const canales = (JSON.parse(claveTablas) as TablaEnVivo[]).map(({ table, filter }) =>
+      supabase
+        .channel(`en-vivo-${table}-${sufijo}`)
+        .on("postgres_changes", { event: "*", schema: "public", table, ...(filter ? { filter } : {}) }, programar)
+        .subscribe(),
+    );
 
     const intervalo = setInterval(refrescar, POLL_MS);
     const alVolver = () => {
@@ -44,11 +59,17 @@ export function useEstadosEnVivo(iniciales: EstadoActual[], incluirDemo: boolean
       clearTimeout(espera);
       clearInterval(intervalo);
       document.removeEventListener("visibilitychange", alVolver);
-      supabase.removeChannel(canal);
+      for (const canal of canales) supabase.removeChannel(canal);
     };
-  }, [refrescar]);
+  }, [claveTablas, refrescar]);
 
-  return { estados, refrescar };
+  return { datos, refrescar };
+}
+
+export function useEstadosEnVivo(iniciales: EstadoActual[], incluirDemo: boolean) {
+  const cargar = useCallback(() => cargarEstados(incluirDemo), [incluirDemo]);
+  const { datos, refrescar } = useDatosEnVivo(iniciales, cargar, TABLAS_ESTADO);
+  return { estados: datos, refrescar };
 }
 
 // Hora de referencia para "hace X min", recalculada cada 30 s.

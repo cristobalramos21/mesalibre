@@ -31,3 +31,21 @@ export type EstadoActual = {
   nivel_efectivo: NivelOcupacion | null;
   alta_demanda: boolean;
 };
+
+// Sin device_id: anon no puede leerlo.
+export type Encuentro = {
+  codigo: string;
+  lugar_id: string;
+  hora: string; // "HH:MM:SS", hora Chile
+  personas: number;
+  nota: string | null;
+  creado_en: string;
+  vence_en: string;
+  llegada_en: string | null;
+  es_demo: boolean;
+};
+
+export type Asistencia = {
+  nombre: string | null;
+  creado_en: string;
+};

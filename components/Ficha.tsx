@@ -143,14 +143,12 @@ export function Ficha({
             {esHabitual ? "Es tu lugar" : "Es mi lugar"}
           </button>
         </div>
-        {/* T3 (encuentros) se implementa en el siguiente bloque. */}
-        <button
-          type="button"
-          disabled
-          className="min-h-13 w-full rounded-xl bg-foreground text-lg font-bold text-background disabled:opacity-40"
+        <Link
+          href={`/lugar/${lugar.slug}/juntarnos`}
+          className="flex min-h-13 w-full items-center justify-center rounded-xl bg-foreground text-lg font-bold text-background"
         >
-          Juntarnos aquí <span className="text-sm font-medium">(próximamente)</span>
-        </button>
+          Juntarnos aquí
+        </Link>
       </div>
     </div>
   );
