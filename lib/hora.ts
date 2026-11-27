@@ -1,3 +1,5 @@
+import { ATAJOS_HORA } from "./config";
+
 // Horas "HH:MM" en America/Santiago (CLAUDE.md §3), sin importar la zona del dispositivo.
 const FORMATO = new Intl.DateTimeFormat("es-CL", {
   timeZone: "America/Santiago",
@@ -17,7 +19,7 @@ export function aMinutos(hora: string): number {
   return h * 60 + m;
 }
 
-function deMinutos(total: number): string {
+export function deMinutos(total: number): string {
   const h = Math.floor(total / 60);
   const m = total % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
@@ -32,4 +34,20 @@ export function proximaMediaHora(ms: number): string {
 // "13:30:00" (columna time) → "13:30"
 export function formatearHora(hora: string): string {
   return hora.slice(0, 5);
+}
+
+// F7 · Atajos: "Ahora" + los fijos que todavía no pasan (ATAJOS_HORA). Si ya pasaron todos
+// (fuera de la hora de almuerzo), "En 15 min" y "En 30 min", redondeados a 5 min.
+export function atajosHora(ahoraMs: number): { etiqueta: string; valor: string }[] {
+  const actual = horaSantiago(ahoraMs);
+  const min = aMinutos(actual);
+  const fijos = ATAJOS_HORA.filter((h) => aMinutos(h) > min).map((h) => ({ etiqueta: h, valor: h }));
+  const relativos =
+    fijos.length > 0
+      ? []
+      : [15, 30]
+          .map((d) => ({ etiqueta: `En ${d} min`, minutos: Math.ceil((min + d) / 5) * 5 }))
+          .filter((a) => a.minutos <= 23 * 60 + 59)
+          .map((a) => ({ etiqueta: a.etiqueta, valor: deMinutos(a.minutos) }));
+  return [{ etiqueta: "Ahora", valor: actual }, ...fijos, ...relativos];
 }

@@ -83,15 +83,16 @@ async function cargarAsistencias(codigo: string): Promise<Asistencia[]> {
 export async function cargarEncuentroConLugar(
   codigo: string,
 ): Promise<{ encuentro: Encuentro; lugar: Lugar } | null> {
-  const encuentro = await cargarEncuentro(codigo);
-  if (!encuentro) return null;
+  // Una sola consulta (join por la FK lugar_id) en vez de dos seguidas.
   const { data, error } = await getSupabase()
-    .from("lugares")
-    .select(COLUMNAS_LUGAR)
-    .eq("id", encuentro.lugar_id)
+    .from("encuentros")
+    .select(`${COLUMNAS_ENCUENTRO}, lugar:lugares(${COLUMNAS_LUGAR})`)
+    .eq("codigo", codigo)
     .maybeSingle();
   if (error) throw error;
-  return data ? { encuentro, lugar: data as unknown as Lugar } : null;
+  if (!data) return null;
+  const { lugar, ...encuentro } = data as unknown as Encuentro & { lugar: Lugar | null };
+  return lugar ? { encuentro, lugar } : null;
 }
 
 export type EncuentroEnVivo = {
