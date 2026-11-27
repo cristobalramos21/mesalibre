@@ -30,6 +30,10 @@ export type EstadoActual = {
   grupos_en_camino: number;
   nivel_efectivo: NivelOcupacion | null;
   alta_demanda: boolean;
+  // Migración 006. Opcionales: sin esa migración llegan como undefined.
+  ultimo_nivel?: NivelOcupacion | null; // último reporte de hoy, aunque tenga más de FRESHNESS_MIN
+  ultimo_en?: string | null;
+  patron_nivel?: NivelOcupacion | null; // F12: cómo suele estar en este día y bloque
 };
 
 // Sin device_id: anon no puede leerlo.

@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import {
   Armchair,
   ArrowLeft,
+  Footprints,
   Microwave,
   Star,
   Sun,
@@ -15,12 +16,14 @@ import {
 } from "lucide-react";
 import { ListaAlternativas } from "@/components/Alternativas";
 import { EstadoBadge } from "@/components/EstadoBadge";
+import { FotoLugar } from "@/components/FotoLugar";
 import { HojaReporte } from "@/components/HojaReporte";
 import { SinResultados } from "@/components/SinResultados";
 import { calcularAlternativas } from "@/lib/alternativas";
-import { describirEstado } from "@/lib/estado";
+import { describirEstado, tituloAlternativas, type EstadoDescrito } from "@/lib/estado";
 import { useAhora, useEstadosEnVivo } from "@/lib/en-vivo";
 import { etiquetaFiltro, sugerirQuitar } from "@/lib/filtros";
+import { distanciaM, minutosCaminando } from "@/lib/geo";
 import { useFiltros, useGrupo, useLugarHabitual } from "@/lib/preferencias";
 import type { EstadoActual, Lugar } from "@/lib/tipos";
 
@@ -53,6 +56,20 @@ export function Ficha({
     ? calcularAlternativas({ actual: lugar, lugares, estados: porLugar, minGrupo: grupo.min, filtros, ahoraMs: ahora })
     : [];
   const esHabitual = habitualSlug === lugar.slug;
+  const habitual = esHabitual ? undefined : lugares.find((l) => l.slug === habitualSlug);
+  // Sin información reciente (y el grupo cabe): lugares cercanos que sí tienen reporte reciente.
+  const confirmadasCerca =
+    estado.tipo === "sin-info" && !noCabe
+      ? calcularAlternativas({
+          actual: lugar,
+          lugares,
+          estados: porLugar,
+          minGrupo: grupo.min,
+          filtros,
+          ahoraMs: ahora,
+          soloConfirmados: true,
+        })
+      : [];
   const avisoVigente =
     lugar.aviso_texto && (!lugar.aviso_hasta || new Date(lugar.aviso_hasta).getTime() > ahora);
 
@@ -69,12 +86,23 @@ export function Ficha({
 
       <section aria-label="Estado ahora" className="mt-4">
         <EstadoBadge estado={estado} grande alinear="izquierda" />
+        <FotoLugar lugar={lugar} estados={estados} ahora={ahora} />
       </section>
+
+      {estado.tipo === "sin-info" && (
+        <SinInformacion
+          lugar={lugar}
+          estado={estado}
+          habitual={habitual}
+          confirmadasCerca={confirmadasCerca}
+          onReportado={refrescar}
+        />
+      )}
 
       {mostrarAlternativas && (
         <section id="alternativas" aria-labelledby="titulo-alternativas" className="mt-6 scroll-mt-4">
           <h2 id="titulo-alternativas" className="mb-1 text-lg font-bold">
-            {noCabe ? `No cabe un grupo de ${grupo.label}. Prueba aquí cerca:` : "Está lleno. Prueba aquí cerca:"}
+            {tituloAlternativas(estado, { noCabe: noCabe ? grupo.label : null })}
           </h2>
           {filtros.length > 0 && (
             <p className="mb-2 text-sm text-muted">
@@ -151,6 +179,56 @@ export function Ficha({
         </Link>
       </div>
     </div>
+  );
+}
+
+// T1 · Sin reportes recientes: qué sabemos, cuánto se camina, un llamado a reportar para quien
+// está en el lugar y, si hay, lugares cercanos con información reciente.
+function SinInformacion({
+  lugar,
+  estado,
+  habitual,
+  confirmadasCerca,
+  onReportado,
+}: {
+  lugar: Lugar;
+  estado: EstadoDescrito;
+  habitual: Lugar | undefined;
+  confirmadasCerca: ReturnType<typeof calcularAlternativas>;
+  onReportado: () => void;
+}) {
+  const sabemosAlgo = estado.ultimo || estado.patron;
+  return (
+    <section aria-labelledby="titulo-sin-info" className="mt-5 rounded-2xl border border-border bg-card p-4">
+      <h2 id="titulo-sin-info" className="text-lg font-bold">
+        ¿Vale la pena ir?
+      </h2>
+      <p className="mt-1 text-muted">
+        {sabemosAlgo
+          ? "Nadie lo ha reportado en los últimos minutos. Arriba está lo último que sabemos."
+          : "Nadie lo ha reportado hoy y todavía no sabemos cómo suele estar a esta hora."}
+      </p>
+      {habitual && (
+        <p className="mt-2 inline-flex items-center gap-1.5">
+          <Footprints aria-hidden size={18} className="shrink-0 text-muted" />
+          {minutosCaminando(distanciaM(habitual, lugar))} min caminando desde {habitual.nombre}
+        </p>
+      )}
+      <div className="mt-3 flex">
+        <HojaReporte
+          lugar={lugar}
+          onReportado={onReportado}
+          variante="destacado"
+          etiqueta="¿Estás aquí? Cuéntanos cómo está"
+        />
+      </div>
+      {confirmadasCerca.length > 0 && (
+        <div className="mt-4">
+          <h3 className="mb-2 font-bold">Con información reciente, cerca de aquí:</h3>
+          <ListaAlternativas alternativas={confirmadasCerca} />
+        </div>
+      )}
+    </section>
   );
 }
 

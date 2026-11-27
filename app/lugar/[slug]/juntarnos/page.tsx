@@ -5,7 +5,8 @@ import { cache, Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import { ErrorCarga } from "@/components/ErrorCarga";
 import { FormEncuentro } from "@/components/FormEncuentro";
-import { cargarLugarPorSlug, describirError } from "@/lib/datos";
+import { cargarEstados, cargarLugarPorSlug, describirError } from "@/lib/datos";
+import { demoActivo } from "@/lib/demo";
 
 // Compartido entre generateMetadata y la página (una sola consulta por request).
 const lugarPorSlug = cache(cargarLugarPorSlug);
@@ -28,9 +29,17 @@ export default function PaginaJuntarnos({ params }: PageProps<"/lugar/[slug]/jun
   );
 }
 
-async function cargar(slug: string) {
+async function cargar(slug: string, demo: boolean) {
   try {
-    return { ok: true as const, lugar: await lugarPorSlug(slug), leidoEnMs: Date.now() };
+    // El estado del lugar solo sirve para avisar (H5): si falla, el formulario igual se muestra.
+    const [lugar, estados] = await Promise.all([
+      lugarPorSlug(slug),
+      cargarEstados(demo).catch((e) => {
+        console.error("juntarnos · estados:", e);
+        return [];
+      }),
+    ]);
+    return { ok: true as const, lugar, estados, leidoEnMs: Date.now() };
   } catch (e) {
     return describirError(e, "No pudimos cargar el lugar. Revisa tu conexión e intenta de nuevo.");
   }
@@ -38,7 +47,8 @@ async function cargar(slug: string) {
 
 async function DatosFormulario({ params }: { params: PageProps<"/lugar/[slug]/juntarnos">["params"] }) {
   const { slug } = await params;
-  const datos = await cargar(slug);
+  const demo = await demoActivo();
+  const datos = await cargar(slug, demo);
 
   if (!datos.ok) {
     return (
@@ -58,8 +68,10 @@ async function DatosFormulario({ params }: { params: PageProps<"/lugar/[slug]/ju
         <ArrowLeft aria-hidden size={18} /> {datos.lugar.nombre}
       </Link>
       <h1 className="mt-1 text-2xl font-bold leading-tight">Juntarnos en {datos.lugar.nombre}</h1>
-      <p className="text-muted">Crea un link para avisarle a tu grupo dónde y a qué hora.</p>
-      <FormEncuentro lugar={datos.lugar} leidoEnMs={datos.leidoEnMs} />
+      <p className="text-muted">
+        Crea un link para avisarle a tu grupo dónde y a qué hora. No reserva la mesa.
+      </p>
+      <FormEncuentro lugar={datos.lugar} estadosIniciales={datos.estados} leidoEnMs={datos.leidoEnMs} demo={demo} />
     </div>
   );
 }

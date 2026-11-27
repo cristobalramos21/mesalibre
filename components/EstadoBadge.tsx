@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, CircleHelp, CircleX, Users } from "lucide-react";
+import { CircleAlert, CircleCheck, CircleHelp, CircleX, Clock, History, Users } from "lucide-react";
 import type { EstadoDescrito, TipoEstado } from "@/lib/estado";
 
 // Estado = color + ícono + texto, siempre con antigüedad (O4).
@@ -16,6 +16,9 @@ export const ICONOS_ESTADO = {
   "sin-info": CircleHelp,
 } satisfies Record<TipoEstado, unknown>;
 
+// Sin información reciente: debajo va lo último que se sabe, con estilo de dato histórico
+// (gris, cursiva, ícono de reloj) para no confundirlo con un estado en vivo (CLAUDE.md §8).
+// En listas (grande = false) cabe una sola línea: el último reporte o, si no hay, el patrón.
 export function EstadoBadge({
   estado,
   grande = false,
@@ -26,6 +29,12 @@ export function EstadoBadge({
   alinear?: "derecha" | "izquierda";
 }) {
   const Icono = ICONOS_ESTADO[estado.tipo];
+  const lineaUltimo = estado.ultimo && `Último reporte: ${estado.ultimo.texto} · ${estado.ultimo.antiguedad}`;
+  const lineaPatron = estado.patron && `Estimado para esta hora: ${estado.patron.texto}`;
+  const historico = grande
+    ? [lineaUltimo && { icono: History, texto: lineaUltimo }, lineaPatron && { icono: Clock, texto: lineaPatron }]
+    : [lineaUltimo ? { icono: History, texto: lineaUltimo } : lineaPatron && { icono: Clock, texto: lineaPatron }];
+
   return (
     <div
       className={`flex flex-col gap-0.5 ${alinear === "derecha" ? "items-end text-right" : "items-start"}`}
@@ -40,8 +49,20 @@ export function EstadoBadge({
       </span>
       {estado.antiguedad && (
         <span className={grande ? "text-sm text-muted" : "text-xs text-muted"}>
-          Reportado {estado.antiguedad}
+          {estado.reportadoComo ? `Reportado: ${estado.reportadoComo} ${estado.antiguedad}` : `Reportado ${estado.antiguedad}`}
         </span>
+      )}
+      {historico.map(
+        (linea) =>
+          linea && (
+            <span
+              key={linea.texto}
+              className={`inline-flex items-center gap-1 italic text-muted ${grande ? "text-sm" : "text-xs"}`}
+            >
+              <linea.icono aria-hidden size={grande ? 15 : 12} className="shrink-0" />
+              {linea.texto}
+            </span>
+          ),
       )}
       {estado.enCamino && (
         <span

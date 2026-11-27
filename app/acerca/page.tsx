@@ -5,6 +5,7 @@ import {
   DEMAND_AFTER_MIN,
   DEMAND_BEFORE_MIN,
   DEMO_COOKIE_DIAS,
+  FOTO_VIGENCIA_MIN,
   FRESHNESS_MIN,
   MAX_ENCUENTROS_HORA,
   REPORT_COOLDOWN_MIN,
@@ -52,6 +53,13 @@ export default function Acerca() {
             más reciente.
           </li>
           <li>
+            Sin información reciente, igual verás el último reporte de hoy con su hora (por ejemplo,
+            «Último reporte: Lleno · hace 2 h») y una estimación de cómo podría estar el lugar a esa
+            hora de lunes a viernes. Esa estimación es inicial: todavía no sale de datos observados y
+            la iremos ajustando con los reportes que se acumulen. Úsala como referencia, no como dato
+            en vivo.
+          </li>
+          <li>
             «N grupos van hacia acá» cuenta los encuentros en ese lugar con hora entre hace{" "}
             {DEMAND_BEFORE_MIN} y dentro de {DEMAND_AFTER_MIN} minutos, que todavía no marcan
             «Llegué».
@@ -61,6 +69,16 @@ export default function Acerca() {
             terreno.
           </li>
         </ul>
+      </Seccion>
+
+      <Seccion titulo="Fotos">
+        <p>
+          Al reportar puedes agregar una foto del lugar. Antes de enviarla, tu navegador la achica y
+          le quita los datos internos de la imagen, como la ubicación. La foto aparece en la ficha
+          del lugar durante {FOTO_VIGENCIA_MIN} minutos y se borra al día siguiente. Por favor
+          fotografía las mesas, no a las personas. Cualquiera puede tocar «Ocultar foto» para
+          sacarla de inmediato.
+        </p>
       </Seccion>
 
       <Seccion titulo="Sin cuenta">

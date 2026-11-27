@@ -25,3 +25,10 @@ export const DEMO_COOKIE_DIAS = 60;         // duración de la cookie de ?demo=o
 export const ATAJOS_HORA = ['13:30', '13:45']; // F7: atajos fijos además de "Ahora"
 export const NOTA_MAX = 80;                 // F7 (también en BD: check en encuentros.nota)
 export const NOMBRE_MAX = 30;               // F9 (también en BD: check en asistencias.nombre)
+export const CREAR_TIMEOUT_MS = 12_000;     // F7: si crear_encuentro no responde en este plazo, se ofrece "Reintentar"
+export const CREAR_LENTO_MS = 4_000;        // F7: desde aquí el botón avisa que la conexión está lenta
+export const FOTO_VIGENCIA_MIN = 30;        // Foto del reporte: se muestra hasta 30 min (también en BD: foto_reciente)
+export const FOTO_LADO_MAX = 1280;          // px del lado mayor al comprimir en el navegador
+export const FOTO_BYTES_MAX = 1_000_000;    // también en BD: file_size_limit del bucket (1 MiB)
+export const FOTO_TIMEOUT_MS = 20_000;      // subida de la foto
+export const FOTO_BUCKET = 'fotos-reportes';
