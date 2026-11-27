@@ -7,11 +7,11 @@ import { ChipsFiltros } from "@/components/ChipsFiltros";
 import { EstadoBadge } from "@/components/EstadoBadge";
 import { SelectorGrupo } from "@/components/SelectorGrupo";
 import { SinResultados } from "@/components/SinResultados";
-import { useHidratado } from "@/lib/almacen";
+import { CLAVES, guardar, useHidratado } from "@/lib/almacen";
 import { LUGARES_COMUNES } from "@/lib/config";
 import { describirEstado, type EstadoDescrito } from "@/lib/estado";
 import { useAhora, useEstadosEnVivo } from "@/lib/en-vivo";
-import { esCompatible, sugerirQuitar } from "@/lib/filtros";
+import { esCompatible, etiquetaFiltro, sugerirQuitar } from "@/lib/filtros";
 import { distanciaM } from "@/lib/geo";
 import { useFiltros, useGrupo, useLugarHabitual } from "@/lib/preferencias";
 import type { EstadoActual, Lugar } from "@/lib/tipos";
@@ -51,6 +51,15 @@ export function Inicio({
         a.distancia - b.distancia ||
         a.lugar.nombre.localeCompare(b.lugar.nombre, "es"),
     );
+
+  // Lugares donde cabe el grupo pero que los filtros dejan fuera: se avisa, para que un filtro
+  // que quedó activo de otra búsqueda no esconda en silencio el lugar que se busca.
+  const ocultosPorFiltros =
+    filtros.length > 0
+      ? lugares.filter(
+          (l) => l.id !== habitual?.id && esCompatible(l, grupo.min, []) && !esCompatible(l, grupo.min, filtros),
+        )
+      : [];
 
   return (
     <div className="flex flex-col gap-5">
@@ -103,6 +112,21 @@ export function Inicio({
             onQuitar={alternarFiltro}
           />
         )}
+        {lista.length > 0 && ocultosPorFiltros.length > 0 && (
+          <div className="mt-3 rounded-xl border border-dashed border-border p-3 text-sm">
+            <p className="text-muted">
+              Tus filtros ({filtros.map(etiquetaFiltro).join(" · ")}) ocultan{" "}
+              {ocultosPorFiltros.map((l) => l.nombre).join(", ")}.
+            </p>
+            <button
+              type="button"
+              onClick={() => guardar(CLAVES.filtros, null)}
+              className="mt-2 min-h-11 rounded-lg border border-foreground px-4 font-semibold"
+            >
+              Quitar filtros
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );
@@ -139,7 +163,11 @@ function TarjetaMiLugar({
         </p>
       )}
       <p className="mt-3 inline-flex items-center gap-1 text-sm font-semibold underline underline-offset-2">
-        {verAlternativas ? "Ver alternativas cerca" : "Ver detalle"}
+        {verAlternativas
+          ? "Ver alternativas cerca"
+          : estado.tipo === "sin-info"
+            ? "¿Vale la pena ir? Ver opciones"
+            : "Ver detalle"}
         <ChevronRight aria-hidden size={16} />
       </p>
     </Link>

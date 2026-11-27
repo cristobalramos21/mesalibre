@@ -12,7 +12,7 @@ import { calcularAlternativas } from "@/lib/alternativas";
 import { NOMBRE_MAX } from "@/lib/config";
 import { recargarEncuentro, type EncuentroEnVivo } from "@/lib/datos";
 import { obtenerDeviceId } from "@/lib/device";
-import { describirEstado, textoAntiguedad, type EstadoDescrito } from "@/lib/estado";
+import { describirEstado, textoAntiguedad, textoEnCamino, tituloAlternativas } from "@/lib/estado";
 import { useAhora, useDatosEnVivo, type TablaEnVivo } from "@/lib/en-vivo";
 import { formatearHora } from "@/lib/hora";
 import { etiquetaFiltro } from "@/lib/filtros";
@@ -55,7 +55,9 @@ export function Encuentro({ encuentro: inicial, asistencias, estados, lugar, lug
   const [terminadoEnBd, setTerminadoEnBd] = useState(false);
 
   const porLugar = useMemo(() => new Map<string, EstadoActual>(datos.estados.map((e) => [e.lugar_id, e])), [datos.estados]);
-  const estado = describirEstado(porLugar.get(lugar.id), ahora);
+  // grupos_en_camino excluye este encuentro (p_excluir_codigo): el texto lo dice ("1 grupo más").
+  const estadoBase = describirEstado(porLugar.get(lugar.id), ahora);
+  const estado = { ...estadoBase, enCamino: textoEnCamino(estadoBase.grupos, true) };
   const hora = formatearHora(encuentro.hora);
   const llegadaMs = encuentro.llegada_en ? new Date(encuentro.llegada_en).getTime() : null;
   const terminado = terminadoEnBd || ahora >= new Date(encuentro.vence_en).getTime();
@@ -129,7 +131,7 @@ export function Encuentro({ encuentro: inicial, asistencias, estados, lugar, lug
           {mostrarAlternativas && (
             <section id="alternativas" aria-labelledby="titulo-alternativas" aria-live="polite" className="mt-5 scroll-mt-4">
               <h2 id="titulo-alternativas" className="mb-2 text-lg font-bold">
-                {tituloAlternativas(sinMesa || llenoAlLlegar, estado)}
+                {tituloAlternativas(estado, { sinMesa: sinMesa || llenoAlLlegar })}
               </h2>
               {alternativas.length > 0 ? (
                 <ListaAlternativas alternativas={alternativas} />
@@ -187,14 +189,6 @@ export function Encuentro({ encuentro: inicial, asistencias, estados, lugar, lug
       )}
     </div>
   );
-}
-
-function tituloAlternativas(sinMesa: boolean, estado: EstadoDescrito): string {
-  if (sinMesa) return "No hay mesa. Prueba aquí cerca:";
-  if (estado.tipo === "lleno" && estado.texto === "Lleno") return "Se llenó. Prueba aquí cerca:";
-  return estado.enCamino
-    ? `Se está llenando: ${estado.enCamino.toLowerCase()}. Plan B aquí cerca:`
-    : "Se está llenando. Plan B aquí cerca:";
 }
 
 function EncuentroTerminado() {
