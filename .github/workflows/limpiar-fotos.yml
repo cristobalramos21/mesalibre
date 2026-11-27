@@ -1,0 +1,52 @@
+# Borra las fotos de reportes con más de 24 h del bucket "fotos-reportes" (migración 007).
+# Se hace por la API de Storage: borrar filas de storage.objects por SQL no borra el archivo.
+# Secrets del repo (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (Supabase → Project Settings → API Keys: la clave
+#   secreta / service_role). Esa clave NUNCA va en el frontend ni en .env.local.
+# GitHub solo ejecuta los workflows programados desde la rama por defecto (main).
+name: Limpiar fotos de reportes
+
+on:
+  schedule:
+    - cron: "23 8 * * *" # todos los días, 08:23 UTC (≈ 05:23 en Chile)
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  limpiar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Borrar fotos de más de 24 h
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+            echo "Faltan los secrets SUPABASE_URL y/o SUPABASE_SERVICE_ROLE_KEY" >&2
+            exit 1
+          fi
+          BASE="${SUPABASE_URL%/}/storage/v1/object"
+          AUTH=(-H "apikey: $SUPABASE_SERVICE_ROLE_KEY")
+          # Las claves antiguas (JWT) también van como Bearer; las nuevas (sb_secret_…) solo en apikey.
+          case "$SUPABASE_SERVICE_ROLE_KEY" in eyJ*) AUTH+=(-H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY");; esac
+          LIMITE=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%S)
+          TOTAL=0
+          # Las más antiguas primero; hasta 10 páginas de 1000 por ejecución.
+          for _ in $(seq 1 10); do
+            LISTA=$(curl --fail-with-body --silent --show-error --retry 3 \
+              -X POST "$BASE/list/fotos-reportes" "${AUTH[@]}" -H "Content-Type: application/json" \
+              -d '{"prefix":"","limit":1000,"offset":0,"sortBy":{"column":"created_at","order":"asc"}}')
+            VIEJAS=$(echo "$LISTA" | jq -c --arg limite "$LIMITE" \
+              '[.[] | select(.id != null and .created_at < $limite) | .name]')
+            N=$(echo "$VIEJAS" | jq 'length')
+            [ "$N" -eq 0 ] && break
+            curl --fail-with-body --silent --show-error --retry 3 \
+              -X DELETE "$BASE/fotos-reportes" "${AUTH[@]}" -H "Content-Type: application/json" \
+              -d "{\"prefixes\": $VIEJAS}" -o /dev/null
+            TOTAL=$((TOTAL + N))
+            [ "$N" -lt 1000 ] && break
+          done
+          echo "Fotos borradas: $TOTAL"
